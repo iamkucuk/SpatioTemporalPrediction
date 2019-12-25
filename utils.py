@@ -12,7 +12,7 @@ def cross_validation(model,
                      trainset: np.ndarray,
                      fold_number: int):
     model_scores = []
-    criterion = nn.NLLLoss()
+    criterion = nn.BCEWithLogitsLoss()
     for train, validation in sequential_fold_generator(dataset=trainset, fold_number=fold_number):
         train_dataset = ConvNetDataset(train)
         validation_dataset = ConvNetDataset(validation)

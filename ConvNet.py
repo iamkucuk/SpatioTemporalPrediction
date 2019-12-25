@@ -25,7 +25,7 @@ class ConvNet(nn.Module):
         # Residual connection
         x += inputs
         out = self.dense(x.view(x.size(0), -1))
-        return F.sigmoid(out)
+        return out
 
     @staticmethod
     def _conv(dim, **kwargs):

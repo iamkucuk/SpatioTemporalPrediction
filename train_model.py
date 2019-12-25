@@ -69,7 +69,7 @@ def train_model(model, dataloaders, dataset_sizes, criterion, optimizer, num_epo
                 # track history if only in train
                 with torch.set_grad_enabled(phase == 'train'):
                     outputs = model(inputs)
-                    _, preds = torch.max(outputs, 1)
+                    # _, preds = torch.max(outputs, 1)
                     loss = criterion(outputs, labels)
 
                     # backward + optimize only if in training phase
@@ -79,8 +79,8 @@ def train_model(model, dataloaders, dataset_sizes, criterion, optimizer, num_epo
 
                 # statistics
 
-                running_loss += loss.item() * inputs.size(0)
-                running_corrects += torch.sum(preds == labels.data)
+                running_loss += loss.item()
+                # running_corrects += torch.sum(preds == labels.data)
                 print("\rIteration: {}/{}, Loss: {}.".format(i + 1, len(dataloaders[phase]),
                                                              loss.item()), end="")
 

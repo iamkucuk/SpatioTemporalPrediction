@@ -7,8 +7,21 @@ import torch, time, copy, sys, os
 from torch.utils.tensorboard import SummaryWriter
 
 
-def train_model(model, ?dataloaders, dataset_sizes, criterion, optimizer, num_epochs=5, scheduler=None,
+def train_model(model, dataloaders, dataset_sizes, criterion, optimizer, num_epochs=5, scheduler=None,
                 model_name=None, device=None):
+    """
+
+    :param model:
+    :param dataloaders:
+    :param dataset_sizes:
+    :param criterion:
+    :param optimizer:
+    :param num_epochs:
+    :param scheduler:
+    :param model_name:
+    :param device:
+    :return:
+    """
     if device is None:
         device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
@@ -16,8 +29,9 @@ def train_model(model, ?dataloaders, dataset_sizes, criterion, optimizer, num_ep
         now = datetime.now()
         model_name = now.strftime("%d%m%Y%H%M%S")
 
+    model = model.to(device)
     writer = SummaryWriter("runs/" + model_name)
-    writer.add_graph(model, torch.zeros([1, 3, 64, 64]).requires_grad_(True).to(device))
+    writer.add_graph(model, torch.zeros([1, 1, 10, 3, 3]).requires_grad_(True).to(device))
     writer.close()
     since = time.time()
     best_acc = 0.0
@@ -45,8 +59,8 @@ def train_model(model, ?dataloaders, dataset_sizes, criterion, optimizer, num_ep
 
             # Iterate over data.
             for i, (inputs, labels) in enumerate(dataloaders[phase]):
-                inputs = inputs.to(device)
-                labels = labels.to(device)
+                inputs = inputs.to(device, dtype=torch.float)
+                labels = labels.to(device, dtype=torch.float)
 
                 # zero the parameter gradients
                 optimizer.zero_grad()

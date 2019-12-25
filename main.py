@@ -1,9 +1,11 @@
 import numpy as np
-from utils import sequential_fold_generator
+
+from ConvNet import ConvNet
+from utils import cross_validation
 
 dataset = np.load("data/train_set.npy")
 
-for x, y in sequential_fold_generator(dataset=dataset, fold_number=10):
-    print(x.shape)
-    print(y.shape)
+model = ConvNet()
+
+hebe = cross_validation(trainset=dataset, model=model, fold_number=10)
 

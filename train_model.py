@@ -1,3 +1,5 @@
+from datetime import datetime
+
 import torch, time, copy, sys, os
 
 # import matplotlib.pyplot as plt
@@ -5,12 +7,14 @@ import torch, time, copy, sys, os
 from torch.utils.tensorboard import SummaryWriter
 
 
-def train_model(model_name, model, dataloaders, dataset_sizes, criterion, optimizer, num_epochs=5, scheduler=None,
-                device=None):
-    # if not os.path.exists('models/' + str(model_name)):
-    #     os.makedirs('models/' + str(model_name))
+def train_model(model, dataloaders, dataset_sizes, criterion, optimizer, num_epochs=5, scheduler=None,
+                model_name=None, device=None):
     if device is None:
         device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+
+    if model_name is None:
+        now = datetime.now()
+        model_name = now.strftime("%d%m%Y%H%M%S")
 
     writer = SummaryWriter("runs/" + model_name)
     writer.add_graph(model, torch.zeros([1, 3, 64, 64]).requires_grad_(True).to(device))
@@ -127,4 +131,4 @@ def train_model(model_name, model, dataloaders, dataset_sizes, criterion, optimi
         time_elapsed // 60, time_elapsed % 60))
     print('Best Validation Accuracy: {}, Epoch: {}'.format(best_acc, best))
     writer.close()
-    return best_val
+    return model

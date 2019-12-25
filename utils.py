@@ -37,11 +37,9 @@ def cross_validation(model,
 def sequential_fold_generator(dataset: np.ndarray,
                               fold_number: int):
     split_rate = len(dataset) // fold_number
-    n = fold_number - 1
-    for n in range(fold_number, 0, -1):
-        yield np.concatenate([dataset[:split_rate * n], dataset[split_rate * (n + 1):]]), dataset[
-                                                                                          split_rate * n: split_rate * (
-                                                                                                  n + 1)]
+    for n in range(fold_number - 1, 0, -1):
+        yield np.concatenate([dataset[:split_rate * n], dataset[split_rate * (n + 1):]]),\
+              dataset[split_rate * n: split_rate * (n + 1)]
 
 
 def train_test_split(dataset: np.ndarray, train_set_ratio=.85) -> (np.ndarray, np.ndarray):

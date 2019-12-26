@@ -27,5 +27,4 @@ def model_predict(model, dataloader, dataset_size, device=None):
 
             predictions.append(outputs)
 
-
     return outputs

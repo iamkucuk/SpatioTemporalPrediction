@@ -17,9 +17,9 @@ class CNNwithRNN(nn.Module):
         self.conv1 = self._conv(2, in_channels=16, out_channels=32, kernel_size=(3, 3))
         self.conv2 = self._conv(2, in_channels=32, out_channels=64, kernel_size=(3, 3))
         self.rnn = nn.GRU(64, hidden_dim, 2, batch_first=True, dropout=drop_prob)
-        self.dense = nn.Linear(hidden_dim, 1)
+        self.dense = nn.Linear(hidden_dim, 9)
 
-    def forward(self, inputs):
+    def forward(self, inputs, hidden=None):
         x = F.relu(self.upsampling1(inputs))
         x = F.relu(self.upsampling2(x))
         x = F.relu(self.conv1(x))
@@ -28,9 +28,9 @@ class CNNwithRNN(nn.Module):
         x += inputs  # b, c, w, h
         x = x.view(x.size(0), x.size(1), -1)  # flattening width and height to preserve spatial information in RNN
         x = x.permute(0, 2, 1)  # permuting tensor according to batch_first = False fashion (h-w, b, c)
-        x = self.rnn(x)
-        x = self.dense(x[0])
-        return x
+        x, hidden = self.rnn(x, hidden)
+        x = self.dense(F.relu(x[:, -1]))
+        return x, hidden
 
     @staticmethod
     def _conv(dim, **kwargs):

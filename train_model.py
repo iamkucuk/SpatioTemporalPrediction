@@ -75,7 +75,7 @@ def train_model(model, dataloaders, dataset_sizes, criterion, optimizer, num_epo
                     else:
                         outputs = model(inputs)
                     # _, preds = torch.max(outputs, 1)
-                    loss = criterion(outputs, labels.unsqueeze(1).float())
+                    loss = criterion(outputs, labels.float())
 
                     # backward + optimize only if in training phase
                     if phase == 'train':

@@ -49,7 +49,7 @@ class CRNN(nn.Module):
         self.input_size = input_size
         self.layer1 = GRU2DCell(input_size, 32, 3, device)
         self.layer2 = GRU2DCell(32, 64, 3, device)
-        self.layer3 = GRU2DCell(64, 1, 3, device)
+        self.layer3 = GRU2DCell(64, 16, 3, device)
         self.dense = nn.Linear(16 * 3 * 3, 9)
 
     def forward(self, inputs, hidden=None):
@@ -63,5 +63,5 @@ class CRNN(nn.Module):
         x = self.layer3(x, hidden[2])
         outputs.append(x)
 
-        # out = self.dense(x.view(x.size(0), -1))
-        return x, outputs
+        out = self.dense(x.view(x.size(0), -1))
+        return out, outputs

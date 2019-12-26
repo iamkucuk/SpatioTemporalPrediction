@@ -5,9 +5,11 @@ import torch
 from torch import nn, optim
 from torch.utils.data import DataLoader
 
+from CNN_RNN import CNNwithRNN
+from ConvNet import ConvNet
 from evaluation_utils import evaluate_model_with_predictions
 from train_model import train_model
-from ConvNetDataset import ConvNetDataset
+from DatasetUtils import CNNwithRNNDataset, ConvNetDataset, CRNNDataset
 
 
 def cross_validation(model,
@@ -15,9 +17,25 @@ def cross_validation(model,
                      fold_number: int):
     model_scores = []
     criterion = nn.BCEWithLogitsLoss()
-    for train, validation in sequential_fold_generator(dataset=trainset, fold_number=fold_number):
-        train_dataset = ConvNetDataset(train)
-        validation_dataset = ConvNetDataset(validation)
+    fold_generator = sequential_fold_generator(dataset=trainset, fold_number=fold_number)
+    dataset_type = -1
+    if isinstance(model, ConvNet):
+        dataset_type = 0
+    elif isinstance(model, CNNwithRNN):
+        dataset_type = 1
+    else:
+        dataset_type = 2
+    for index, (train, validation) in enumerate(fold_generator):
+        if dataset_type == 0:
+            train_dataset = ConvNetDataset(train)
+            validation_dataset = ConvNetDataset(validation)
+        elif dataset_type == 1:
+            train_dataset = CNNwithRNNDataset(train)
+            validation_dataset = CNNwithRNNDataset(validation)
+        else:
+            train_dataset = CRNNDataset(train)
+            validation_dataset = CRNNDataset(validation)
+
         dataset_sizes = {
             "train": len(train_dataset),
             "val": len(validation_dataset)
@@ -33,7 +51,7 @@ def cross_validation(model,
         trained_model = train_model(model_copy, dataloaders, dataset_sizes, criterion, optimizer, num_epochs=10)
         model_scores.append(evaluate_model_with_predictions(trained_model, dataloaders["val"], dataset_sizes["val"]))
 
-    return np.mean(model_scores)
+    return np.mean(model_scores, axis=0)
 
 
 def sequential_fold_generator(dataset: np.ndarray,

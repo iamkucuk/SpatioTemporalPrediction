@@ -2,7 +2,7 @@ import numpy as np
 import torch
 
 
-def model_predict(model, dataloader, dataset_size, device=None):
+def model_predict(model, dataloader, device=None):
     """
 
     :param model:
@@ -31,6 +31,14 @@ def model_predict(model, dataloader, dataset_size, device=None):
 
 
 def evaluate_model_with_predictions(model, validation_loader, dataset_size, device=None):
+    """
+
+    :param model:
+    :param validation_loader:
+    :param dataset_size:
+    :param device:
+    :return:
+    """
     if device is None:
         device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
@@ -41,9 +49,12 @@ def evaluate_model_with_predictions(model, validation_loader, dataset_size, devi
 
         with torch.set_grad_enabled(False):
             outputs = model(inputs)
-            confusion_matrix += evaluate_predictions(labels, outputs.data.numpy())
+            outputs_np = outputs.cpu().data.numpy()
+            outputs_np[outputs_np > 0] = 1
+            outputs_np[outputs_np < 0] = 0
+            confusion_matrix += evaluate_predictions(labels.data.numpy(), outputs_np)
 
-    return outputs
+    return confusion_matrix / 9
 
 
 def evaluate_probas(y_true: np.ndarray, y_proba: np.ndarray):
@@ -56,7 +67,7 @@ def evaluate_probas(y_true: np.ndarray, y_proba: np.ndarray):
     pass
 
 
-def evaluate_predictions(y_true: np.ndarray, y_pred: np.ndarray):
+def evaluate_predictions(y_true: np.ndarray, y_pred: np.ndarray) -> np.ndarray:
     """
 
     :param y_true:
@@ -67,4 +78,4 @@ def evaluate_predictions(y_true: np.ndarray, y_pred: np.ndarray):
     fp = np.sum(np.logical_and(y_pred == 1, y_true == 0))
     tn = np.sum(np.logical_and(y_pred == 0, y_true == 0))
     fn = np.sum(np.logical_and(y_pred == 0, y_true == 1))
-    return np.matrix[[tp, fp], [fn, tn]]
+    return np.array([[tn, fn], [fp, tp]])

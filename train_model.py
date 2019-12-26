@@ -31,8 +31,8 @@ def train_model(model, dataloaders, dataset_sizes, criterion, optimizer, num_epo
 
     model = model.to(device)
     writer = SummaryWriter("runs/" + model_name)
-    writer.add_graph(model, torch.zeros([1, 1, 10, 3, 3]).requires_grad_(True).to(device))
-    writer.close()
+    # writer.add_graph(model, torch.zeros(1, 1, 3, 3).requires_grad_(True).to(device))
+    # writer.close()
     since = time.time()
     best_acc = 0.0
     best_val = 99999
@@ -60,7 +60,7 @@ def train_model(model, dataloaders, dataset_sizes, criterion, optimizer, num_epo
             # Iterate over data.
             for i, (inputs, labels) in enumerate(dataloaders[phase]):
                 inputs = inputs.to(device, dtype=torch.float)
-                labels = labels.to(device, dtype=torch.float)
+                labels = labels.to(device, dtype=torch.long)
 
                 # zero the parameter gradients
                 optimizer.zero_grad()
@@ -70,7 +70,7 @@ def train_model(model, dataloaders, dataset_sizes, criterion, optimizer, num_epo
                 with torch.set_grad_enabled(phase == 'train'):
                     outputs = model(inputs)
                     # _, preds = torch.max(outputs, 1)
-                    loss = criterion(outputs, labels)
+                    loss = criterion(outputs, labels.float())
 
                     # backward + optimize only if in training phase
                     if phase == 'train':
@@ -137,7 +137,7 @@ def train_model(model, dataloaders, dataset_sizes, criterion, optimizer, num_epo
         else:
             print("Loss diddn't decrease. Early stopping.")
             writer.close()
-            return val_loss
+            return model
 
         # torch.save(model.state_dict(), './models/' + str(model_name) + '/model_{}_epoch.pt'.format(epoch + 1))
     time_elapsed = time.time() - since

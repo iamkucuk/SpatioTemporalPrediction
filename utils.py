@@ -18,7 +18,6 @@ def cross_validation(model,
     model_scores = []
     criterion = nn.BCEWithLogitsLoss()
     fold_generator = sequential_fold_generator(dataset=trainset, fold_number=fold_number)
-    dataset_type = -1
     if isinstance(model, ConvNet):
         dataset_type = 0
     elif isinstance(model, CNNwithRNN):
@@ -29,12 +28,15 @@ def cross_validation(model,
         if dataset_type == 0:
             train_dataset = ConvNetDataset(train)
             validation_dataset = ConvNetDataset(validation)
+            isRecurrent = False
         elif dataset_type == 1:
             train_dataset = CNNwithRNNDataset(train)
             validation_dataset = CNNwithRNNDataset(validation)
+            isRecurrent = True
         else:
             train_dataset = CRNNDataset(train)
             validation_dataset = CRNNDataset(validation)
+            isRecurrent = True
 
         dataset_sizes = {
             "train": len(train_dataset),
@@ -48,7 +50,8 @@ def cross_validation(model,
         model_copy = copy.deepcopy(model)
         optimizer = optim.Adam(model_copy.parameters())
 
-        trained_model = train_model(model_copy, dataloaders, dataset_sizes, criterion, optimizer, num_epochs=10)
+        trained_model = train_model(model_copy, dataloaders, dataset_sizes, criterion, optimizer,
+                                    num_epochs=10, isRecurrent=isRecurrent)
         model_scores.append(evaluate_model_with_predictions(trained_model, dataloaders["val"], dataset_sizes["val"]))
 
     return np.mean(model_scores, axis=0)

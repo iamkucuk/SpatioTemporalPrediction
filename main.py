@@ -11,6 +11,6 @@ dataset = np.load("data/train_set.npy")
 # model = ConvNet()
 # model = CNNwithRNN()
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-model = CRNN(input_size=10, device=device)
+model = CRNN(input_size=1, device=device)
 hebe = cross_validation(trainset=dataset, model=model, fold_number=10)
 

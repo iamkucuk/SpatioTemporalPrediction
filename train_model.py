@@ -8,9 +8,10 @@ from torch.utils.tensorboard import SummaryWriter
 
 
 def train_model(model, dataloaders, dataset_sizes, criterion, optimizer, num_epochs=5, scheduler=None,
-                model_name=None, device=None):
+                model_name=None, device=None, isRecurrent = False):
     """
 
+    :param isRecurrent:
     :param model:
     :param dataloaders:
     :param dataset_sizes:
@@ -56,7 +57,8 @@ def train_model(model, dataloaders, dataset_sizes, criterion, optimizer, num_epo
 
             running_loss = 0.0
             running_corrects = 0
-
+            if isRecurrent:
+                hidden_state = None
             # Iterate over data.
             for i, (inputs, labels) in enumerate(dataloaders[phase]):
                 inputs = inputs.to(device, dtype=torch.float)
@@ -68,13 +70,16 @@ def train_model(model, dataloaders, dataset_sizes, criterion, optimizer, num_epo
                 # forward
                 # track history if only in train
                 with torch.set_grad_enabled(phase == 'train'):
-                    outputs = model(inputs)
+                    if isRecurrent:
+                        outputs, hidden_state = model(inputs, hidden_state)
+                    else:
+                        outputs = model(inputs)
                     # _, preds = torch.max(outputs, 1)
-                    loss = criterion(outputs, labels.float())
+                    loss = criterion(outputs, labels.unsqueeze(1).float())
 
                     # backward + optimize only if in training phase
                     if phase == 'train':
-                        loss.backward()
+                        loss.backward(retain_graph=True)
                         optimizer.step()
 
                 # statistics

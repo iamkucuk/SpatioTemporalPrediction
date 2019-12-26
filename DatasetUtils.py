@@ -62,20 +62,20 @@ class CRNNDataset(Dataset):
     :param file_path:
     """
 
-    def __init__(self, dataset=None, past=10, file_path="data/train_set.npy"):
-        self.past = past
+    def __init__(self, dataset=None, file_path="data/train_set.npy"):
+        # self.past = past
         if dataset is None:
             self.dataset = np.load(file_path)
         else:
             self.dataset = dataset
 
     def __len__(self):
-        return len(self.dataset) - 11
+        return len(self.dataset) - 1
 
     def __getitem__(self, idx):
         if torch.is_tensor(idx):
             idx = idx.data.numpy()
-        idx = idx + self.past
-        features = self.dataset[idx - self.past: idx, :, :]
-        target = self.dataset[idx, :, :]
-        return features, target.reshape(-1, 1).squeeze(-1)
+        # idx = idx + self.past
+        features = self.dataset[idx, :, :]
+        target = self.dataset[idx + 1, :, :]
+        return np.expand_dims(features, axis=0), target

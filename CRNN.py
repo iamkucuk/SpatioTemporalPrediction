@@ -44,19 +44,24 @@ class GRU2DCell(nn.Module):
 
 class CRNN(nn.Module):
 
-    def __init__(self, input_size=10, device="cpu"):
+    def __init__(self, input_size=1, device="cpu"):
         super(CRNN, self).__init__()
         self.input_size = input_size
-        self.layer1 = GRU2DCell(10, 32, 3, device)
+        self.layer1 = GRU2DCell(input_size, 32, 3, device)
         self.layer2 = GRU2DCell(32, 64, 3, device)
-        self.layer3 = GRU2DCell(64, 16, 3, device)
+        self.layer3 = GRU2DCell(64, 1, 3, device)
         self.dense = nn.Linear(16 * 3 * 3, 9)
 
     def forward(self, inputs, hidden=None):
+        if hidden is None:
+            hidden = [hidden] * 3
+        outputs = []
+        x = self.layer1(inputs, hidden[0])
+        outputs.append(x)
+        x = self.layer2(x, hidden[1])
+        outputs.append(x)
+        x = self.layer3(x, hidden[2])
+        outputs.append(x)
 
-        x = self.layer1(inputs, None)
-        x = self.layer2(x, None)
-        x = self.layer3(x, None)
-
-        out = self.dense(x.view(x.size(0), -1))
-        return out
+        # out = self.dense(x.view(x.size(0), -1))
+        return x, outputs

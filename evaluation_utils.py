@@ -91,10 +91,10 @@ import matplotlib.pyplot as plt
 
 def evaluate_probas(y_true: np.ndarray, y_proba: np.ndarray):
     """
-
-    :param y_true:
-    :param y_proba:
-    :return:
+    Evaluation metric (Precision-Recall Curve) for probability evaluation
+    :param y_true: Ground truth
+    :param y_proba: Output of model. If the model output is not between 0 and 1, a sigmoid function will be applied.
+    :return: Precision and recall lists
     """
     sigmoid = lambda z: 1 / (1 + np.exp(-z))
     if (np.min(y_proba) < 0) or (np.max(y_proba) > 1):
@@ -120,11 +120,11 @@ def evaluate_probas(y_true: np.ndarray, y_proba: np.ndarray):
 
 def evaluate_predictions(y_true: np.ndarray, y_pred: np.ndarray, threshold: float = .00001) -> np.ndarray:
     """
-
-    :param threshold:
-    :param y_true:
-    :param y_pred:
-    :return:
+    Outputs confusion matrix.
+    :param threshold: Default .000001 - Threshold be applied if y_pred is not predicted as a class (0 or 1)
+    :param y_true: Ground truth
+    :param y_pred: Output of model. Can be both prediction or predictid probabiltiy.
+    :return: 2x2 Confusion matrix
     """
     y_pred = np.copy(y_pred)
     y_pred[y_pred > threshold] = 1

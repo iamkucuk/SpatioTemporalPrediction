@@ -52,7 +52,7 @@ class CNNwithRNNDataset(Dataset):
             idx = idx.data.numpy()
         features = self.dataset[idx, :, :]
         target = self.dataset[idx + 1, :, :].reshape(-1, 1)
-        return np.expand_dims(features, axis=0), target
+        return np.expand_dims(features, axis=0), target.squeeze(-1)
 
 
 class CRNNDataset(Dataset):

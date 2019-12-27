@@ -5,13 +5,17 @@ from torch.utils.data import Dataset
 
 class ConvNetDataset(Dataset):
     """
-
-    :param dataset:
-    :param past:
-    :param file_path:
+    Dataset implementation for 3D ConvNet
     """
 
     def __init__(self, dataset=None, past=10, file_path="data/train_set.npy"):
+        """
+        Initialize method
+        :param dataset: NumPy dataset for training or evaluation part. Will take account
+        "file_path" parameter if left none.
+        :param past: Default: 10 - n sequential time sampling for 3D convolution.
+        :param file_path: Path to dataset file. Will be taken into account if "dataset" parameter is None.
+        """
         self.past = past
         if dataset is None:
             self.dataset = np.load(file_path)
@@ -32,12 +36,16 @@ class ConvNetDataset(Dataset):
 
 class CNNwithRNNDataset(Dataset):
     """
-
-    :param dataset:
-    :param file_path:
+    Dataset implementation for CNNwithRNN model.
     """
 
     def __init__(self, dataset=None, file_path="data/train_set.npy"):
+        """
+        Initialize method
+        :param dataset: NumPy dataset for training or evaluation part. Will take account
+        "file_path" parameter if left none.
+        :param file_path: Path to dataset file. Will be taken into account if "dataset" parameter is None.
+        """
         # self.past = past
         if dataset is None:
             self.dataset = np.load(file_path)
@@ -57,12 +65,16 @@ class CNNwithRNNDataset(Dataset):
 
 class CRNNDataset(Dataset):
     """
-
-    :param dataset:
-    :param file_path:
+    Dataset implementation for CRNN model.
     """
 
     def __init__(self, dataset=None, file_path="data/train_set.npy"):
+        """
+        Initialize method
+        :param dataset: NumPy dataset for training or evaluation part. Will take account
+        "file_path" parameter if left none.
+        :param file_path: Path to dataset file. Will be taken into account if "dataset" parameter is None.
+        """
         # self.past = past
         if dataset is None:
             self.dataset = np.load(file_path)

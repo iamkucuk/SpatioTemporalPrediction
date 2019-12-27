@@ -15,6 +15,13 @@ from DatasetUtils import CNNwithRNNDataset, ConvNetDataset, CRNNDataset
 def cross_validation(model,
                      trainset: np.ndarray,
                      fold_number: int):
+    """
+    N-Fold cross validation helper function.
+    :param model: Model engine
+    :param trainset: Training dataset to be used for cross validation
+    :param fold_number: Desired fold number
+    :return: Averaged score for all folds
+    """
     model_scores = []
     criterion = nn.BCEWithLogitsLoss()
     fold_generator = sequential_fold_generator(dataset=trainset, fold_number=fold_number)
@@ -61,6 +68,12 @@ def cross_validation(model,
 
 def sequential_fold_generator(dataset: np.ndarray,
                               fold_number: int):
+    """
+    Fold generator for sequential datasets preserving temporal features.
+    :param dataset: NumPy array of dataset
+    :param fold_number: Number of folds
+    :return: Generated fold
+    """
     split_rate = len(dataset) // fold_number
 
     for n in range(fold_number):
@@ -69,6 +82,12 @@ def sequential_fold_generator(dataset: np.ndarray,
 
 def fold_generator(dataset: np.ndarray,
                    fold_number: int):
+    """
+    Fold generator for non-sequential datasets
+    :param dataset: NumPy array of dataset
+    :param fold_number: Number of folds
+    :return: Generated fold
+    """
     split_rate = len(dataset) // fold_number
     for n in range(fold_number - 1, 0, -1):
         yield np.concatenate([dataset[:split_rate * n], dataset[split_rate * (n + 1):]]), \
@@ -76,6 +95,12 @@ def fold_generator(dataset: np.ndarray,
 
 
 def train_test_split(dataset: np.ndarray, train_set_ratio=.85) -> (np.ndarray, np.ndarray):
+    """
+    Helper function for train-test split
+    :param dataset: NumPy array of dataset
+    :param train_set_ratio: Ratio for the split
+    :return: Train and Test sets.
+    """
     return dataset[:len(dataset) * train_set_ratio], dataset[len(dataset) * train_set_ratio:]
 
 # model = ConvNet()

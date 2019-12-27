@@ -5,10 +5,13 @@ from torch.nn import functional as F
 
 class ConvNet(nn.Module):
     """
-
+    3D Convolutional Neural Network implementation that captures spatial and temporal patterns.
     """
 
     def __init__(self):
+        """
+        Initialization function
+        """
         super(ConvNet, self).__init__()
         # Calculation of the output size to be added
         self.upsampling1 = self._conv_transpose(3, in_channels=1, out_channels=8, kernel_size=(3, 3, 3))
@@ -18,6 +21,11 @@ class ConvNet(nn.Module):
         self.dense = nn.Linear(in_features=64 * 10 * 3 * 3, out_features=9)
 
     def forward(self, inputs):
+        """
+        Forward pass of the model
+        :param inputs: Input tensor
+        :return: Output tensor
+        """
         x = F.relu(self.upsampling1(inputs))
         x = F.relu(self.upsampling2(x))
         x = F.relu(self.conv1(x))
@@ -30,10 +38,10 @@ class ConvNet(nn.Module):
     @staticmethod
     def _conv(dim, **kwargs):
         """
-
-        :param dim:
-        :param kwargs:
-        :return:
+        Lazy method for creating convolutional layers with desired dimensionality.
+        :param dim: Dimension of the convolutional layer
+        :param kwargs: Standard PyTorch layer arguments.
+        :return: Generated layer
         """
         if dim == 1:
             layer = nn.Conv1d(**kwargs)
@@ -49,10 +57,10 @@ class ConvNet(nn.Module):
     @staticmethod
     def _conv_transpose(dim, **kwargs):
         """
-
-        :param dim:
-        :param kwargs:
-        :return:
+        Lazy method for creating transposed convolutional layers with desired dimensionality.
+        :param dim: Dimension of the transposed convolutional layer
+        :param kwargs: Standard PyTorch layer arguments.
+        :return: Generated layer
         """
         if dim == 1:
             layer = nn.ConvTranspose1d(**kwargs)

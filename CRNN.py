@@ -8,10 +8,17 @@ from torch.nn import init
 
 class GRU2DCell(nn.Module):
     """
-    Generate a convolutional GRU cell
+    Generates a 2D Convolutional GRU cell
     """
 
     def __init__(self, input_size, hidden_size, kernel_size, device):
+        """
+        Initialize method for GRU2D Cell.
+        :param input_size: Input channel size
+        :param hidden_size: Hidden size for GRU emulation.
+        :param kernel_size: Kernel size for cell
+        :param device: Device to use
+        """
         super().__init__()
         self.device = device
         padding = kernel_size // 2
@@ -31,6 +38,12 @@ class GRU2DCell(nn.Module):
         self.tanh = nn.Tanh()
 
     def forward(self, inputs, prev_state):
+        """
+        Forward pass for cell
+        :param inputs: Input tensor
+        :param prev_state: Previous cell state for GRU emulation
+        :return: Output tensor of cell
+        """
         prev_state = prev_state if prev_state is not None else self.init_hidden((inputs.size(0),
                                                                                  self.hidden_size,
                                                                                  inputs.size(2),
@@ -44,12 +57,25 @@ class GRU2DCell(nn.Module):
         return out
 
     def init_hidden(self, size):
+        """
+        Initialization for hidden output
+        :param size: Size of hidden state
+        :return: Zeros tensor with size of given hidden state
+        """
         return Variable(torch.zeros(size)).to(self.device)
 
 
 class CRNN(nn.Module):
+    """
+    CRNN model for spatio-temporal prediction
+    """
 
     def __init__(self, input_size=1, device="cpu"):
+        """
+        Initialization method
+        :param input_size: Default: 1 - Input channel of data.
+        :param device: Device to use
+        """
         super(CRNN, self).__init__()
         self.input_size = input_size
         self.layer1 = GRU2DCell(input_size, 32, 3, device)
@@ -58,6 +84,13 @@ class CRNN(nn.Module):
         self.dense = nn.Linear(64 * 3 * 3, 9)
 
     def forward(self, inputs, hidden=None):
+        """
+        Forward pass for CRNN model
+        :param inputs: Input tensor of the model
+        :param hidden: Default: None - Hidden output of the previous cell for GRU emulation. If None, hidden state will
+        be initialized as zero.
+        :return: Output of the model and output of the current state of GRU cells.
+        """
         if hidden is None:
             hidden = [None, None]
         else:
@@ -73,4 +106,9 @@ class CRNN(nn.Module):
         return out, outputs
 
     def init_hidden(self, size):
+        """
+        Dummy method for programmatic easiness.
+        :param size:
+        :return:
+        """
         pass

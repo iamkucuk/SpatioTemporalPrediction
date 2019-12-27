@@ -8,7 +8,7 @@ from torch.utils.tensorboard import SummaryWriter
 
 
 def train_model(model, dataloaders, dataset_sizes, criterion, optimizer, num_epochs=5, scheduler=None,
-                model_name=None, device=None, isRecurrent = False):
+                model_name=None, device=None, isRecurrent=False):
     """
 
     :param isRecurrent:
@@ -57,10 +57,10 @@ def train_model(model, dataloaders, dataset_sizes, criterion, optimizer, num_epo
 
             running_loss = 0.0
             running_corrects = 0
-            if isRecurrent:
-                hidden_state = None
             # Iterate over data.
             for i, (inputs, labels) in enumerate(dataloaders[phase]):
+                if (i == 0) and isRecurrent:
+                    hidden_state = model.init_hidden(inputs.size(0))
                 inputs = inputs.to(device, dtype=torch.float)
                 labels = labels.to(device, dtype=torch.long)
 
@@ -119,11 +119,10 @@ def train_model(model, dataloaders, dataset_sizes, criterion, optimizer, num_epo
             if phase == 'val' and epoch_acc > best_acc:
                 best_acc = epoch_acc
 
-                best = epoch + 1
-                best_model_wts = copy.deepcopy(model.state_dict())
-
             if phase == 'val' and epoch_loss < best_val:
                 best_val = epoch_loss
+                best = epoch + 1
+                best_model = copy.deepcopy(model)
 
         print('Train Loss: {:.4f} Acc: {:.4f}'.format(avg_loss, t_acc))
         print('Val Loss: {:.4f} Acc: {:.4f}'.format(val_loss, val_acc))
@@ -150,4 +149,4 @@ def train_model(model, dataloaders, dataset_sizes, criterion, optimizer, num_epo
         time_elapsed // 60, time_elapsed % 60))
     print('Best Validation Accuracy: {}, Epoch: {}'.format(best_acc, best))
     writer.close()
-    return model
+    return best_model

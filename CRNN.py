@@ -17,29 +17,34 @@ class GRU2DCell(nn.Module):
         padding = kernel_size // 2
         self.input_size = input_size
         self.hidden_size = hidden_size
-        self.reset_gate = nn.Conv2d(input_size + hidden_size, hidden_size, kernel_size, padding=padding)
-        self.update_gate = nn.Conv2d(input_size + hidden_size, hidden_size, kernel_size, padding=padding)
-        self.out_gate = nn.Conv2d(input_size + hidden_size, hidden_size, kernel_size, padding=padding)
+
+        # Gates of GRU as Convolutional layers
+        self.reset_gate_current = nn.Conv2d(input_size, hidden_size, kernel_size, padding=padding)
+        self.update_gate_current = nn.Conv2d(input_size, hidden_size, kernel_size, padding=padding)
+        self.out_gate_current = nn.Conv2d(input_size, hidden_size, kernel_size, padding=padding)
+
+        self.reset_gate_prev = nn.Conv2d(hidden_size, hidden_size, kernel_size, padding=padding)
+        self.update_gate_prev = nn.Conv2d(hidden_size, hidden_size, kernel_size, padding=padding)
+        self.out_gate_prev = nn.Conv2d(hidden_size, hidden_size, kernel_size, padding=padding)
+
+        self.sigmoid = nn.Sigmoid()
+        self.tanh = nn.Tanh()
 
     def forward(self, inputs, prev_state):
+        prev_state = prev_state if prev_state is not None else self.init_hidden((inputs.size(0),
+                                                                                 self.hidden_size,
+                                                                                 inputs.size(2),
+                                                                                 inputs.size(3)))
 
-        # get batch and spatial sizes
-        batch_size = inputs.data.size()[0]
-        spatial_size = inputs.data.size()[2:]
+        z_l = self.sigmoid(self.update_gate_current(inputs) + self.update_gate_prev(prev_state))
+        r_l = self.sigmoid(self.reset_gate_current(inputs) + self.reset_gate_prev(prev_state))
+        h_tilda_t = self.tanh(self.out_gate_current(inputs) + self.out_gate_prev(prev_state * r_l))
+        out = prev_state * (1 - z_l) + h_tilda_t * z_l
 
-        # generate empty prev_state, if None is provided
-        if prev_state is None:
-            state_size = [batch_size, self.hidden_size] + list(spatial_size)
-            prev_state = Variable(torch.zeros(state_size)).to(self.device)
+        return out
 
-        # data size is [batch, channel, height, width]
-        stacked_inputs = torch.cat([inputs, prev_state], dim=1)
-        update = F.sigmoid(self.update_gate(stacked_inputs))
-        reset = F.sigmoid(self.reset_gate(stacked_inputs))
-        out_inputs = F.tanh(self.out_gate(torch.cat([inputs, prev_state * reset], dim=1)))
-        new_state = prev_state * (1 - update) + out_inputs * update
-
-        return new_state
+    def init_hidden(self, size):
+        return Variable(torch.zeros(size)).to(self.device)
 
 
 class CRNN(nn.Module):
@@ -49,19 +54,23 @@ class CRNN(nn.Module):
         self.input_size = input_size
         self.layer1 = GRU2DCell(input_size, 32, 3, device)
         self.layer2 = GRU2DCell(32, 64, 3, device)
-        self.layer3 = GRU2DCell(64, 16, 3, device)
-        self.dense = nn.Linear(16 * 3 * 3, 9)
+        # self.layer3 = GRU2DCell(64, 16, 3, device)
+        self.dense = nn.Linear(64 * 3 * 3, 9)
 
     def forward(self, inputs, hidden=None):
         if hidden is None:
-            hidden = [hidden] * 3
+            hidden = [None, None]
+        else:
+            hidden[0] = hidden[0][-inputs.size(0):]
+            hidden[1] = hidden[1][-inputs.size(0):]
         outputs = []
         x = self.layer1(inputs, hidden[0])
         outputs.append(x)
         x = self.layer2(x, hidden[1])
         outputs.append(x)
-        x = self.layer3(x, hidden[2])
-        outputs.append(x)
 
         out = self.dense(x.view(x.size(0), -1))
         return out, outputs
+
+    def init_hidden(self, size):
+        pass

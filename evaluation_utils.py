@@ -96,6 +96,7 @@ def evaluate_probas(y_true: np.ndarray, y_proba: np.ndarray):
     :param y_proba: Output of model. If the model output is not between 0 and 1, a sigmoid function will be applied.
     :return: Precision and recall lists
     """
+
     sigmoid = lambda z: 1 / (1 + np.exp(-z))
     if (np.min(y_proba) < 0) or (np.max(y_proba) > 1):
         y_proba = sigmoid(y_proba)

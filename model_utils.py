@@ -16,7 +16,7 @@ class ModelEngine:
     This class is compatible with only specific type models.
     """
 
-    def __init__(self, model, criterion, optimizer, isRecurrent,
+    def __init__(self, model, criterion, optimizer, isRecurrent=False,
                  scheduler=None, model_name=None, tensorboard_visuals=True, device=None):
         """
         :param model : Created model. Can be ConvNet, CNN_RNN or CRNN type
@@ -50,7 +50,7 @@ class ModelEngine:
 
         self.model = self.model.to(device)
 
-    def train(self, dataloaders, num_epoch, inplace=True):
+    def fit(self, dataloaders, num_epoch=10, inplace=True):
         """
         Initiates training procedure for the current object. Returns the model with the best validation loss.
         :param dataloaders: Dictionary of the dataloaders for both training and validation parts.
@@ -59,6 +59,7 @@ class ModelEngine:
         :param inplace: Default: True - If True, do operation inplace and return None.
         :return: Trained model.
         """
+
         model = copy.deepcopy(self.model)
 
         if self.isTensorboard:
@@ -66,18 +67,18 @@ class ModelEngine:
 
         t_epoch = trange(num_epoch, desc="Epochs")
         epoch_loss_prev = 9999999
+        best_val = 99999999999999
         for epoch in t_epoch:
-            running_loss = 0.0
             for phase in ['train', 'val']:
+                running_loss = 0.0
                 if phase == 'train':
                     if self.scheduler is not None:
                         self.scheduler.step()
                     self.model.train()
                 else:
                     self.model.eval()
-
-                t_batches = tqdm(enumerate(dataloaders[phase]), desc="Iterations", leave=False)
-                for i, (inputs, labels) in t_batches:
+                t_batches = tqdm(dataloaders[phase], desc="Iterations", leave=False, total=len(dataloaders[phase]), )
+                for i, (inputs, labels) in enumerate(t_batches):
                     if (i == 0) and self.isRecurrent:
                         hidden_state = model.init_hidden(inputs.size(0))
                     inputs = inputs.to(self.device, dtype=torch.float)
@@ -103,7 +104,7 @@ class ModelEngine:
                                           loss.item(),
                                           epoch * len(dataloaders['train']) + i)
                     # t_batch
-                    t_batches.set_description("Train Loss: {:.4f}".format(loss.item()))
+                    t_batches.set_description("{} loss: {:.4f}".format(phase, loss.item()))
                     t_batches.refresh()
 
                 epoch_loss = running_loss / len(dataloaders[phase])
@@ -131,6 +132,7 @@ class ModelEngine:
                 writer.close()
                 if inplace:
                     self.model = best_model
+                    return
                 else:
                     return model
 

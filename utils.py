@@ -58,7 +58,7 @@ def cross_validation(model,
         optimizer = optim.Adam(model_copy.parameters())
 
         trained_model = train_model(model_copy, dataloaders, dataset_sizes, criterion, optimizer,
-                                    num_epochs=2, isRecurrent=isRecurrent)
+                                    num_epochs=10, isRecurrent=isRecurrent)
 
         model_scores.append(evaluate_model_with_probas(trained_model,
                                                        dataloaders["val"], dataset_sizes["val"]))
@@ -94,13 +94,14 @@ def fold_generator(dataset: np.ndarray,
               dataset[split_rate * n: split_rate * (n + 1)]
 
 
-def train_test_split(dataset: np.ndarray, train_set_ratio=.85) -> (np.ndarray, np.ndarray):
+def train_test_split(dataset: np.ndarray, train_set_ratio =.85) -> (np.ndarray, np.ndarray):
     """
     Helper function for train-test split
     :param dataset: NumPy array of dataset
     :param train_set_ratio: Ratio for the split
     :return: Train and Test sets.
     """
-    return dataset[:len(dataset) * train_set_ratio], dataset[len(dataset) * train_set_ratio:]
+    cut_point = np.round(len(dataset) * train_set_ratio).astype(np.int64)
+    return dataset[:cut_point], dataset[cut_point:]
 
 # model = ConvNet()

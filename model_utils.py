@@ -50,9 +50,10 @@ class ModelEngine:
 
         self.model = self.model.to(self.device)
 
-    def fit(self, dataloaders, num_epoch=10, inplace=True):
+    def fit(self, dataloaders, num_epoch=10, inplace=True, earlyStopping=False):
         """
         Initiates training procedure for the current object. Returns the model with the best validation loss.
+        :param earlyStopping: Early stopping based on validation loss decrease.
         :param dataloaders: Dictionary of the dataloaders for both training and validation parts.
         Training dataloader's key should be "train". Validation dataloader's key should be "val".
         :param num_epoch: Number of epochs. Should be integer.
@@ -129,7 +130,7 @@ class ModelEngine:
             if val_loss < best_val:
                 best_val = epoch_loss
                 best_model = copy.deepcopy(model)
-            else:
+            elif earlyStopping:
                 print("Loss diddn't decrease. Early stopping.")
                 writer.close()
                 if inplace:

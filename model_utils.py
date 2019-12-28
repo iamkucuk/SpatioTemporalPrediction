@@ -38,6 +38,7 @@ class ModelEngine:
         self.model = model
         if device is None:
             self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+            print("Using device {}".format(self.device))
         else:
             self.device = device
         if model_name is None:
@@ -47,7 +48,7 @@ class ModelEngine:
             self.model_name = model_name
         self.isTensorboard = tensorboard_visuals
 
-        self.model = self.model.to(device)
+        self.model = self.model.to(self.device)
 
     def fit(self, dataloaders, num_epoch=10, inplace=True):
         """
@@ -116,27 +117,26 @@ class ModelEngine:
                 else:
                     val_loss = epoch_loss
 
-                if phase == 'val':
-                    if epoch_loss < best_val:
-                        best_val = epoch_loss
-                        best_model = copy.deepcopy(model)
-                    else:
-                        print("Loss diddn't decrease. Early stopping.")
-                        writer.close()
-                        if inplace:
-                            self.model = best_model
-                            return
-                        else:
-                            return model
+            t_epoch.set_description("Train Loss: {:.4f} - Val Loss: {:.4f}".format(avg_loss, val_loss))
 
-        t_epoch.set_description("Train Loss: {:.4f} - Val Loss: {:.4f}".format(avg_loss, val_loss))
+            if self.isTensorboard:
+                writer.add_scalar('val_loss',
+                                  val_loss,
+                                  epoch)
 
-        if self.isTensorboard:
-            writer.add_scalar('val_loss',
-                              val_loss,
-                              epoch)
+                writer.close()
 
-            writer.close()
+            if val_loss < best_val:
+                best_val = epoch_loss
+                best_model = copy.deepcopy(model)
+            else:
+                print("Loss diddn't decrease. Early stopping.")
+                writer.close()
+                if inplace:
+                    self.model = best_model
+                    return
+                else:
+                    return model
 
         if inplace:
             self.model = best_model

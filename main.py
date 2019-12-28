@@ -20,24 +20,17 @@ train_dataset, validation_dataset = train_test_split(dataset=trainset, train_set
 
 #%%
 
-model = ConvNet()
-criterion = nn.BCEWithLogitsLoss()
-optimizer = optim.Adam(model.parameters())
-train_dataset = ConvNetDataset(train_dataset)
-validation_dataset = ConvNetDataset(validation_dataset)
-dataloaders = {
-    "train": DataLoader(train_dataset, batch_size=32),
-    "val": DataLoader(validation_dataset, batch_size=32)
+model1 = ConvNet()
+criterion1 = nn.BCEWithLogitsLoss()
+optimizer1 = optim.Adam(model1.parameters())
+train_dataset1 = ConvNetDataset(train_dataset)
+validation_dataset1 = ConvNetDataset(validation_dataset)
+dataloaders1 = {
+    "train": DataLoader(train_dataset1, batch_size=16),
+    "val": DataLoader(validation_dataset1, batch_size=16)
 }
-engine1 = ModelEngine(model, criterion, optimizer)
+engine1 = ModelEngine(model1, criterion1, optimizer1)
 
 #%%
 
-engine1.fit(dataloaders)
-
-#%%
-
-model = CNNwithRNN()
-optimizer = optim.Adam(model.parameters())
-engine2 = ModelEngine(model, criterion, optimizer, isRecurrent=True)
-engine2.fit(dataloaders)
+engine1.fit(dataloaders1)

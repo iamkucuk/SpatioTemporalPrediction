@@ -31,7 +31,6 @@ class ModelEngine:
         selected automatically.
         """
 
-
         self.scheduler = scheduler
         self.isRecurrent = isRecurrent
         self.optimizer = optimizer
@@ -66,9 +65,12 @@ class ModelEngine:
             writer = SummaryWriter("runs/" + self.model_name)
 
         t_epoch = trange(num_epoch, desc="Epochs")
-        epoch_loss_prev = 9999999
-        best_val = 99999999999999
+
         for epoch in t_epoch:
+            if epoch == 0:
+                epoch_loss_prev = 99999999999999
+                best_val = 99999999999999
+
             for phase in ['train', 'val']:
                 running_loss = 0.0
                 if phase == 'train':
@@ -114,29 +116,26 @@ class ModelEngine:
                 else:
                     val_loss = epoch_loss
 
-                if phase == 'val' and epoch_loss < best_val:
-                    best_val = epoch_loss
-                    best_model = copy.deepcopy(model)
+                if phase == 'val':
+                    if epoch_loss < best_val:
+                        best_val = epoch_loss
+                        best_model = copy.deepcopy(model)
+                    else:
+                        print("Loss diddn't decrease. Early stopping.")
+                        writer.close()
+                        if inplace:
+                            self.model = best_model
+                            return
+                        else:
+                            return model
 
-            t_epoch.set_description("Train Loss: {:.4f} - Val Loss: {:.4f}".format(avg_loss, val_loss))
-
-            if self.isTensorboard:
-                writer.add_scalar('val_loss',
-                                  val_loss,
-                                  epoch)
-
-            if epoch_loss_prev > epoch_loss:
-                epoch_loss_prev = epoch_loss
-            else:
-                print("Loss diddn't decrease. Early stopping.")
-                writer.close()
-                if inplace:
-                    self.model = best_model
-                    return
-                else:
-                    return model
+        t_epoch.set_description("Train Loss: {:.4f} - Val Loss: {:.4f}".format(avg_loss, val_loss))
 
         if self.isTensorboard:
+            writer.add_scalar('val_loss',
+                              val_loss,
+                              epoch)
+
             writer.close()
 
         if inplace:

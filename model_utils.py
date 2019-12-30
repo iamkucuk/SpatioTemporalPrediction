@@ -1,9 +1,8 @@
 import copy
+from datetime import datetime
 
 import numpy as np
 import torch
-from datetime import datetime
-
 from torch.utils.tensorboard import SummaryWriter
 from tqdm.autonotebook import tqdm, trange
 
@@ -61,7 +60,7 @@ class ModelEngine:
         :return: Trained model.
         """
 
-        model = copy.deepcopy(self.model)
+        # model = copy.deepcopy(self.model)
 
         if self.isTensorboard:
             writer = SummaryWriter("runs/" + self.model_name)
@@ -76,15 +75,13 @@ class ModelEngine:
             for phase in ['train', 'val']:
                 running_loss = 0.0
                 if phase == 'train':
-                    if self.scheduler is not None:
-                        self.scheduler.step()
                     self.model.train()
                 else:
                     self.model.eval()
                 t_batches = tqdm(dataloaders[phase], desc="Iterations", leave=False, total=len(dataloaders[phase]), )
                 for i, (inputs, labels) in enumerate(t_batches):
                     if (i == 0) and self.isRecurrent:
-                        hidden_state = model.init_hidden(inputs.size(0))
+                        hidden_state = self.model.init_hidden(inputs.size(0))
                     inputs = inputs.to(self.device, dtype=torch.float)
                     labels = labels.to(self.device, dtype=torch.long)
 
@@ -92,14 +89,20 @@ class ModelEngine:
 
                     with torch.set_grad_enabled(phase == 'train'):
                         if self.isRecurrent:
-                            outputs, hidden_state = model(inputs, hidden_state)
+                            outputs, hidden_state = self.model(inputs, hidden_state)
                         else:
-                            outputs = model(inputs)
+                            outputs = self.model(inputs)
                         loss = self.criterion(outputs, labels.float())
 
                         if phase == 'train':
                             loss.backward(retain_graph=True)
                             self.optimizer.step()
+                            if self.scheduler is not None:
+                                self.scheduler.step()
+                                if self.isTensorboard:
+                                    writer.add_scalar('learning_rate',
+                                                      self._get_lr(),
+                                                      epoch * len(dataloaders['train']) + i)
 
                     running_loss += loss.item()
 
@@ -110,6 +113,8 @@ class ModelEngine:
                     # t_batch
                     t_batches.set_description("{} loss: {:.4f}".format(phase, loss.item()))
                     t_batches.refresh()
+
+                t_batches.close()
 
                 epoch_loss = running_loss / len(dataloaders[phase])
 
@@ -129,7 +134,7 @@ class ModelEngine:
 
             if val_loss < best_val:
                 best_val = epoch_loss
-                best_model = copy.deepcopy(model)
+                best_model = copy.deepcopy(self.model)
             elif earlyStopping:
                 print("Loss diddn't decrease. Early stopping.")
                 writer.close()
@@ -137,7 +142,7 @@ class ModelEngine:
                     self.model = best_model
                     return
                 else:
-                    return model
+                    return self.model
 
         if inplace:
             self.model = best_model

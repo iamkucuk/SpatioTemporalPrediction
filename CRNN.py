@@ -1,9 +1,6 @@
 import torch
 import torch.nn as nn
-import numpy as np
-import torch.nn.functional as F
 from torch.autograd import Variable
-from torch.nn import init
 
 
 class GRU2DCell(nn.Module):
@@ -11,7 +8,7 @@ class GRU2DCell(nn.Module):
     Generates a 2D Convolutional GRU cell
     """
 
-    def __init__(self, input_size, hidden_size, kernel_size, device):
+    def __init__(self, input_size, hidden_size, kernel_size, device=None):
         """
         Initialize method for GRU2D Cell.
         :param input_size: Input channel size
@@ -70,17 +67,20 @@ class CRNN(nn.Module):
     CRNN model for spatio-temporal prediction
     """
 
-    def __init__(self, input_size=1, device="cpu"):
+    def __init__(self, input_size=1, device=None):
         """
         Initialization method
         :param input_size: Default: 1 - Input channel of data.
-        :param device: Device to use
+        :param device: Device to use. Device will be detected automatically if left None.
         """
         super(CRNN, self).__init__()
+        if device is None:
+            self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+        else:
+            self.device = device
         self.input_size = input_size
-        self.layer1 = GRU2DCell(input_size, 32, 3, device)
-        self.layer2 = GRU2DCell(32, 64, 3, device)
-        # self.layer3 = GRU2DCell(64, 16, 3, device)
+        self.layer1 = GRU2DCell(input_size, 32, 3, self.device)
+        self.layer2 = GRU2DCell(32, 64, 3, self.device)
         self.dense = nn.Linear(64 * 3 * 3, 9)
 
     def forward(self, inputs, hidden=None):

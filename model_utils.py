@@ -149,6 +149,10 @@ class ModelEngine:
         else:
             return best_model
 
+    def _get_lr(self):
+        for param_group in self.optimizer.param_groups:
+            return param_group['lr']
+
     def predict_proba_with_loader(self, dataloader):
         """
         Makes predictions with the given dataloader.
